@@ -19,6 +19,8 @@ from .tripadvisor_table import NearbyLocationTable
 from .tripadvisor_api import TripAdvisorAPI
 from .tripadvisor_api import TripAdvisorAPICall
 
+logger = log.getLogger(__name__)
+
 
 class TripAdvisorHandler(APIHandler):
     """A class for handling connections and interactions with the TripAdvisor Content API.
@@ -87,7 +89,7 @@ class TripAdvisorHandler(APIHandler):
 
         except Exception as e:
             response.error_message = f"Error connecting to TripAdvisor api: {e}"
-            log.logger.error(response.error_message)
+            logger.error(response.error_message)
 
         if response.success is False and self.is_connected is True:
             self.is_connected = False
@@ -95,7 +97,7 @@ class TripAdvisorHandler(APIHandler):
         return response
 
     def call_tripadvisor_searchlocation_api(
-        self, method_name: str = None, params: dict = None
+            self, method_name: str = None, params: dict = None
     ) -> pd.DataFrame:
         """It processes the JSON data from the call and transforms it into pandas.Dataframe"""
         if self.is_connected is False:
@@ -129,7 +131,7 @@ class TripAdvisorHandler(APIHandler):
         return result
 
     def call_tripadvisor_location_details_api(
-        self, method_name: str = None, params: dict = None
+            self, method_name: str = None, params: dict = None
     ) -> pd.DataFrame:
         """It processes the JSON data from the call and transforms it into pandas.Dataframe"""
         if self.is_connected is False:
@@ -192,7 +194,7 @@ class TripAdvisorHandler(APIHandler):
         return result
 
     def call_tripadvisor_reviews_api(
-        self, method_name: str = None, params: dict = None
+            self, method_name: str = None, params: dict = None
     ) -> pd.DataFrame:
         """It processes the JSON data from the call and transforms it into pandas.Dataframe"""
         if self.is_connected is False:
@@ -225,7 +227,7 @@ class TripAdvisorHandler(APIHandler):
         return result
 
     def call_tripadvisor_photos_api(
-        self, method_name: str = None, params: dict = None
+            self, method_name: str = None, params: dict = None
     ) -> pd.DataFrame:
         """It processes the JSON data from the call and transforms it into pandas.Dataframe"""
         if self.is_connected is False:
@@ -250,7 +252,7 @@ class TripAdvisorHandler(APIHandler):
         return result
 
     def call_tripadvisor_nearby_location_api(
-        self, method_name: str = None, params: dict = None
+            self, method_name: str = None, params: dict = None
     ) -> pd.DataFrame:
         """It processes the JSON data from the call and transforms it into pandas.Dataframe"""
         if self.is_connected is False:

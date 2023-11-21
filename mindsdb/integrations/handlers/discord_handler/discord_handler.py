@@ -15,7 +15,10 @@ from mindsdb.integrations.libs.response import (
     RESPONSE_TYPE,
 )
 
+logger = log.getLogger(__name__)
+
 discord_bot = None
+
 
 class DiscordHandler(APIHandler):
     """
@@ -82,7 +85,7 @@ class DiscordHandler(APIHandler):
             response.success = True
         except Exception as e:
             response.error_message = e
-            log.logger.error(f'Error connecting to Discord: {response.error_message}')
+            logger.error(f'Error connecting to Discord: {response.error_message}')
 
         self.is_connected = response.success
 
@@ -104,7 +107,7 @@ class DiscordHandler(APIHandler):
         df = self.call_discord_api(operation, params)
 
         return Response(RESPONSE_TYPE.TABLE, data_frame=df)
-    
+
     def utc_to_snowflake(self, utc_date: str) -> int:
         """
         Convert a UTC date to a Snowflake date.
@@ -120,7 +123,7 @@ class DiscordHandler(APIHandler):
 
     def call_discord_api(
             self, operation: str, params: dict = None, filters: list = None
-        ):
+    ):
         """
         Call a Discord API method.
         Args:

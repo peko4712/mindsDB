@@ -18,6 +18,8 @@ from .notion_table import (
     NotionPagesTable,
 )
 
+logger = log.getLogger(__name__)
+
 
 class NotionHandler(APIHandler):
     name = "notion"
@@ -66,7 +68,7 @@ class NotionHandler(APIHandler):
             response.error_message = (
                 f"Error connecting to Notion api: {e}. Check api_token"
             )
-            log.logger.error(response.error_message)
+            logger.error(response.error_message)
             response.success = False
 
         if response.success is False:
@@ -122,7 +124,7 @@ class NotionHandler(APIHandler):
         return data2
 
     def call_notion_api(
-        self, method_name: str = None, params: dict = None, filters: list = None
+            self, method_name: str = None, params: dict = None, filters: list = None
     ):
         # method > table > columns
         expansions_map = {
@@ -177,7 +179,7 @@ class NotionHandler(APIHandler):
                     data = data[:left]
                     break
 
-            log.logger.debug(f">>>notion in: {method_name}({params})")
+            logger.debug(f">>>notion in: {method_name}({params})")
 
             resp = method(**params)
 
@@ -201,9 +203,9 @@ class NotionHandler(APIHandler):
 
             data.extend(chunk)
             if (
-                count_results is not None
-                and hasattr(resp, "meta")
-                and "next_token" in resp.meta
+                    count_results is not None
+                    and hasattr(resp, "meta")
+                    and "next_token" in resp.meta
             ):
                 params["next_token"] = resp.meta["next_token"]
             else:

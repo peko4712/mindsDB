@@ -21,6 +21,8 @@ from mindsdb.integrations.libs.vectordatabase_handler import (
 )
 from mindsdb.utilities import log
 
+logger = log.getLogger(__name__)
+
 
 class LanceDBHandler(VectorStoreHandler):
     """This handler handles connection and execution of the LanceDB statements."""
@@ -71,7 +73,7 @@ class LanceDBHandler(VectorStoreHandler):
             self._client = self._get_client()
             self.is_connected = True
         except Exception as e:
-            log.logger.error(f"Error connecting to LanceDB client, {e}!")
+            logger.error(f"Error connecting to LanceDB client, {e}!")
             self.is_connected = False
 
     def disconnect(self):
@@ -89,7 +91,7 @@ class LanceDBHandler(VectorStoreHandler):
             self._client.table_names()
             response_code.success = True
         except Exception as e:
-            log.logger.error(f"Error connecting to LanceDB , {e}!")
+            logger.error(f"Error connecting to LanceDB , {e}!")
             response_code.error_message = str(e)
         finally:
             if response_code.success is True and need_to_close:
@@ -122,7 +124,7 @@ class LanceDBHandler(VectorStoreHandler):
         return mapping[operator]
 
     def _translate_condition(
-        self, conditions: List[FilterCondition]
+            self, conditions: List[FilterCondition]
     ) -> Optional[dict]:
         """
         Translate a list of FilterCondition objects to string that can be used by LanceDB.
@@ -167,12 +169,12 @@ class LanceDBHandler(VectorStoreHandler):
         return " and ".join(lancedb_conditions) if lancedb_conditions else None
 
     def select(
-        self,
-        table_name: str,
-        columns: List[str] = None,
-        conditions: List[FilterCondition] = None,
-        offset: int = None,
-        limit: int = None,
+            self,
+            table_name: str,
+            columns: List[str] = None,
+            conditions: List[FilterCondition] = None,
+            offset: int = None,
+            limit: int = None,
     ) -> HandlerResponse:
         try:
             # Load collection table
@@ -208,7 +210,9 @@ class LanceDBHandler(VectorStoreHandler):
 
         new_columns = columns + [TableField.DISTANCE.value] if TableField.DISTANCE.value in result.columns else columns
 
-        col_str = ', '.join([col for col in new_columns if col in (TableField.ID.value, TableField.CONTENT.value, TableField.METADATA.value, TableField.EMBEDDINGS.value, TableField.DISTANCE.value)])
+        col_str = ', '.join([col for col in new_columns if col in (
+        TableField.ID.value, TableField.CONTENT.value, TableField.METADATA.value, TableField.EMBEDDINGS.value,
+        TableField.DISTANCE.value)])
 
         where_str = f'where {filters}' if filters else ''
         # implementing limit and offset. Not supported natively in lancedb
@@ -225,7 +229,7 @@ class LanceDBHandler(VectorStoreHandler):
         return Response(resp_type=RESPONSE_TYPE.TABLE, data_frame=data_df)
 
     def insert(
-        self, table_name: str, data: pd.DataFrame, columns: List[str] = None
+            self, table_name: str, data: pd.DataFrame, columns: List[str] = None
     ) -> HandlerResponse:
         """
         Insert data into the LanceDB database.
@@ -235,7 +239,8 @@ class LanceDBHandler(VectorStoreHandler):
         """
         try:
             collection = self._client.open_table(table_name)
-            df = data[[TableField.ID.value, TableField.CONTENT.value, TableField.METADATA.value, TableField.EMBEDDINGS.value]]
+            df = data[
+                [TableField.ID.value, TableField.CONTENT.value, TableField.METADATA.value, TableField.EMBEDDINGS.value]]
             pa_data = pa.Table.from_pandas(df, preserve_index=False)
             vec_data = vec_to_table(df[TableField.EMBEDDINGS.value].values.tolist())
             new_pa_data = pa_data.append_column("vector", vec_data["vector"])
@@ -259,7 +264,7 @@ class LanceDBHandler(VectorStoreHandler):
         return Response(resp_type=RESPONSE_TYPE.OK)
 
     def update(
-        self, table_name: str, data: pd.DataFrame, columns: List[str] = None
+            self, table_name: str, data: pd.DataFrame, columns: List[str] = None
     ) -> HandlerResponse:
         """
         Update data in the LanceDB database.
@@ -268,7 +273,7 @@ class LanceDBHandler(VectorStoreHandler):
         return super().update(table_name, data, columns)
 
     def delete(
-        self, table_name: str, conditions: List[FilterCondition] = None
+            self, table_name: str, conditions: List[FilterCondition] = None
     ) -> HandlerResponse:
         try:
             filters = self._translate_condition(conditions)

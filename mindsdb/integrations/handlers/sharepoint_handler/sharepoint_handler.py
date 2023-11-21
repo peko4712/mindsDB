@@ -16,7 +16,6 @@ from mindsdb.integrations.libs.const import HANDLER_CONNECTION_ARG_TYPE as ARG_T
 from mindsdb.utilities import log
 from collections import OrderedDict
 
-
 logger = log.getLogger(__name__)
 
 
@@ -41,11 +40,11 @@ class SharepointHandler(APIHandler):
         self.kwargs = kwargs
 
         if not (
-            self.connection_data["clientId"]
-            and (
-                self.connection_data["tenantId"]
-                and self.connection_data["clientSecret"]
-            )
+                self.connection_data["clientId"]
+                and (
+                        self.connection_data["tenantId"]
+                        and self.connection_data["clientSecret"]
+                )
         ):
             raise Exception(
                 "client params and tenant id is required for Sharepoint connection!"
@@ -98,7 +97,7 @@ class SharepointHandler(APIHandler):
             connection = self.connect()
             response.success = connection.check_bearer_token_validity()
         except Exception as e:
-            log.logger.error("Error connecting to Sharepoint! " + str(e))
+            logger.error("Error connecting to Sharepoint! " + str(e))
             response.error_message = str(e)
 
         self.is_connected = response.success

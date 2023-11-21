@@ -19,6 +19,8 @@ from mindsdb.integrations.libs.vectordatabase_handler import (
 from mindsdb.utilities import log
 from mindsdb.utilities.profiler import profiler
 
+logger = log.getLogger(__name__)
+
 
 # todo Issue #7316 add support for different indexes and search algorithms e.g. cosine similarity or L2 norm
 class PgVectorHandler(VectorStoreHandler, PostgresHandler):
@@ -42,10 +44,10 @@ class PgVectorHandler(VectorStoreHandler, PostgresHandler):
             try:
                 # load pg_vector extension
                 cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
-                log.logger.info("pg_vector extension loaded")
+                logger.info("pg_vector extension loaded")
 
             except psycopg.Error as e:
-                log.logger.error(
+                logger.error(
                     f"Error loading pg_vector extension, ensure you have installed it before running, {e}!"
                 )
                 return HandlerResponse(resp_type=RESPONSE_TYPE.ERROR, error_message=str(e))
@@ -101,20 +103,20 @@ class PgVectorHandler(VectorStoreHandler, PostgresHandler):
 
     @staticmethod
     def _construct_full_after_from_clause(
-        offset_clause: str,
-        limit_clause: str,
-        where_clause: str,
+            offset_clause: str,
+            limit_clause: str,
+            where_clause: str,
     ) -> str:
 
         return f"{where_clause} {offset_clause} {limit_clause}"
 
     def _build_select_query(
-        self,
-        table_name: str,
-        columns: List[str] = None,
-        conditions: List[FilterCondition] = None,
-        limit: int = None,
-        offset: int = None,
+            self,
+            table_name: str,
+            columns: List[str] = None,
+            conditions: List[FilterCondition] = None,
+            limit: int = None,
+            offset: int = None,
     ) -> str:
         """
         given inputs, build string query
@@ -141,7 +143,6 @@ class PgVectorHandler(VectorStoreHandler, PostgresHandler):
         else:
             targets = ', '.join(columns)
 
-
         if filter_conditions:
 
             if embedding_search:
@@ -157,12 +158,12 @@ class PgVectorHandler(VectorStoreHandler, PostgresHandler):
             return f"SELECT {targets} FROM {table_name} {after_from_clause}"
 
     def select(
-        self,
-        table_name: str,
-        columns: List[str] = None,
-        conditions: List[FilterCondition] = None,
-        offset: int = None,
-        limit: int = None,
+            self,
+            table_name: str,
+            columns: List[str] = None,
+            conditions: List[FilterCondition] = None,
+            offset: int = None,
+            limit: int = None,
     ) -> pd.DataFrame:
         """
         Retrieve the data from the SQL statement with eliminated rows that dont satisfy the WHERE condition
@@ -195,7 +196,7 @@ class PgVectorHandler(VectorStoreHandler, PostgresHandler):
             self.connection.commit()
 
     def insert(
-        self, table_name: str, data: pd.DataFrame
+            self, table_name: str, data: pd.DataFrame
     ):
         """
         Insert data into the pgvector table database.
@@ -213,7 +214,7 @@ class PgVectorHandler(VectorStoreHandler, PostgresHandler):
             self.connection.commit()
 
     def update(
-        self, table_name: str, data: pd.DataFrame, key_columns: List[str] = None
+            self, table_name: str, data: pd.DataFrame, key_columns: List[str] = None
     ):
         """
         Udate data into the pgvector table database.
@@ -262,14 +263,13 @@ class PgVectorHandler(VectorStoreHandler, PostgresHandler):
             self.connection.commit()
 
     def delete(
-        self, table_name: str, conditions: List[FilterCondition] = None
+            self, table_name: str, conditions: List[FilterCondition] = None
     ):
 
         filter_conditions = self._translate_conditions(conditions)
         where_clause = self._construct_where_clause(filter_conditions)
 
         with self.connection.cursor() as cur:
-
             # convert search embedding to string
 
             # we need to use the <-> operator to search for similar vectors,

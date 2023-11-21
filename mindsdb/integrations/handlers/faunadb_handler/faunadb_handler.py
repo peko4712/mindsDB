@@ -19,6 +19,8 @@ from mindsdb.integrations.libs.base import DatabaseHandler
 
 from mindsdb.utilities import log
 
+logger = log.getLogger(__name__)
+
 
 class FaunaDBHandler(DatabaseHandler):
     """This handler handles connection and execution of the FaunaDB statements."""
@@ -95,7 +97,7 @@ class FaunaDBHandler(DatabaseHandler):
             self.is_connected = True
             return self._client
         except Exception as e:
-            log.logger.error(f"Error connecting to FaunaDB client, {e}!")
+            logger.error(f"Error connecting to FaunaDB client, {e}!")
             self.is_connected = False
 
     def disconnect(self):
@@ -116,7 +118,7 @@ class FaunaDBHandler(DatabaseHandler):
             self._client.ping()
             response_code.success = True
         except Exception as e:
-            log.logger.error(f"Error connecting to FaunaDB , {e}!")
+            logger.error(f"Error connecting to FaunaDB , {e}!")
             response_code.error_message = str(e)
         finally:
             if response_code.success is True and need_to_close:
@@ -174,12 +176,12 @@ class FaunaDBHandler(DatabaseHandler):
         return Response(RESPONSE_TYPE.TABLE, df)
 
     def select(
-        self,
-        table_name: str,
-        columns: List[str] = None,
-        conditions: List[str] = None,
-        offset: int = None,
-        limit: int = None,
+            self,
+            table_name: str,
+            columns: List[str] = None,
+            conditions: List[str] = None,
+            offset: int = None,
+            limit: int = None,
     ) -> dict:
         # select * from db_name.collection_name
         if len(columns) > 0 and isinstance(columns[0], Star):
@@ -260,7 +262,7 @@ class FaunaDBHandler(DatabaseHandler):
                 ),
             )
         except Exception as e:
-            log.logger.error(f"Error getting tables from FaunaDB: {e}")
+            logger.error(f"Error getting tables from FaunaDB: {e}")
             return Response(
                 resp_type=RESPONSE_TYPE.ERROR,
                 error_message=f"Error getting tables from FaunaDB: {e}",
