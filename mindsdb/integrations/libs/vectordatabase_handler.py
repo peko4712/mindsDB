@@ -25,7 +25,7 @@ from mindsdb.integrations.utilities.sql_utils import conditions_to_filter
 from ..utilities.sql_utils import query_traversal
 from .base import BaseHandler
 
-LOG = log.getLogger(__name__)
+logger = log.getLogger(__name__)
 
 
 class FilterOperator(Enum):

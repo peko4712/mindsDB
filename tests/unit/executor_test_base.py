@@ -112,6 +112,8 @@ class BaseUnitTest:
         db.session.add(r)
         r = db.Integration(name="dummy_ml", data={}, engine="dummy_ml")
         db.session.add(r)
+        r = db.Integration(name="dummy_llm", data={}, engine="dummy_llm")
+        db.session.add(r)
         r = db.Integration(name="neuralforecast", data={}, engine="neuralforecast")
         db.session.add(r)
         r = db.Integration(name="popularity_recommender", data={}, engine="popularity_recommender")
@@ -134,6 +136,10 @@ class BaseUnitTest:
         db.session.add(r)
         r = db.Integration(name="rag", data={}, engine="rag")
         db.session.add(r)
+
+        r = db.Integration(name="sentence_transformers", data={}, engine="sentence_transformers")
+        db.session.add(r)
+
         r = db.Integration(name="pycaret", data={}, engine="pycaret")
         db.session.add(r)
 
@@ -171,7 +177,13 @@ class BaseExecutorTest(BaseUnitTest):
         super().setup_method()
         self.set_executor()
 
-    def set_executor(self, mock_lightwood=False, mock_model_controller=False, import_dummy_ml=False):
+    def set_executor(
+        self,
+        mock_lightwood=False,
+        mock_model_controller=False,
+        import_dummy_ml=False,
+        import_dummy_llm=False,
+    ):
         # creates executor instance with mocked model_interface
         from mindsdb.api.mysql.mysql_proxy.controllers.session_controller import (
             SessionController,
@@ -204,6 +216,17 @@ class BaseExecutorTest(BaseUnitTest):
 
             if not integration_controller.handlers_import_status['dummy_ml']['import']['success']:
                 error = integration_controller.handlers_import_status['dummy_ml']['import']['error_message']
+                raise Exception(f"Can not import: {str(handler_dir)}: {error}")
+
+        if import_dummy_llm:
+            test_handler_path = os.path.dirname(__file__)
+            sys.path.append(test_handler_path)
+
+            handler_dir = Path(test_handler_path) / 'dummy_llm_handler'
+            integration_controller.import_handler('', handler_dir)
+
+            if not integration_controller.handlers_import_status['dummy_llm']['import']['success']:
+                error = integration_controller.handlers_import_status['dummy_llm']['import']['error_message']
                 raise Exception(f"Can not import: {str(handler_dir)}: {error}")
 
         if mock_lightwood:
@@ -339,6 +362,16 @@ class BaseExecutorDummyML(BaseExecutorTest):
         self.set_executor(import_dummy_ml=True)
 
 
+class BaseExecutorDummyLLM(BaseExecutorTest):
+    """
+    Set up executor: mock LLM handler
+    """
+
+    def setup_method(self):
+        super().setup_method()
+        self.set_executor(import_dummy_llm=True)
+
+
 class BaseExecutorMockPredictor(BaseExecutorTest):
     """
     Set up executor: mock data handler and LW handler
@@ -362,7 +395,9 @@ class BaseExecutorMockPredictor(BaseExecutorTest):
             self.db.session.delete(r)
 
         if "problem_definition" not in predictor:
-            predictor["problem_definition"] = {"timeseries_settings": {"is_timeseries": False}}
+            predictor["problem_definition"] = {
+                "timeseries_settings": {"is_timeseries": False}
+            }
 
         # add predictor to table
         r = self.db.Predictor(

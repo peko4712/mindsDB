@@ -2,6 +2,7 @@ import copy
 from typing import List
 
 import pandas as pd
+from mindsdb.integrations.handlers.sentence_transformers_handler.settings import DEFAULT_EMBEDDING_MODEL
 
 import mindsdb_sql.planner.utils as utils
 from mindsdb_sql.parser.ast import (
@@ -13,6 +14,7 @@ from mindsdb_sql.parser.ast import (
     Delete,
     Star
 )
+from mindsdb_sql.parser.dialects.mindsdb import CreatePredictor
 
 import mindsdb.interfaces.storage.db as db
 from mindsdb.integrations.libs.vectordatabase_handler import TableField
@@ -236,10 +238,15 @@ class KnowledgeBaseController:
                 return kb
             raise EntityExistsError("Knowledge base already exists", name)
 
-        # model
-        model_name = embedding_model.parts[-1]
+        if embedding_model is None:
+            # create default embedding model
+            model_name = self._create_default_embedding_model(project_name, name)
 
-        if len(embedding_model.parts) > 1:
+        else:
+            # get embedding model from input
+            model_name = embedding_model.parts[-1]
+
+        if embedding_model and len(embedding_model.parts) > 1:
             # model project is set
             model_project = self.session.database_controller.get_project(embedding_model.parts[-2])
         else:
@@ -297,6 +304,24 @@ class KnowledgeBaseController:
 
         self.session.integration_controller.add(vector_store_name, engine, connection_args)
         return vector_store_name
+
+    def _create_default_embedding_model(self, project_name, kb_name, engine="sentence_transformers"):
+        """create a default embedding model for knowledge base, if not specified"""
+        model_name = f"{kb_name}_default_embeddings_model"
+
+        statement = CreatePredictor(
+            name=Identifier(parts=[project_name, model_name]),
+            targets=[Identifier(parts=["embeddings"])],
+            using={"embeddings_model_name": DEFAULT_EMBEDDING_MODEL}
+        )
+
+        ml_handler = self.session.integration_controller.get_handler(
+            engine
+        )
+
+        _ = self.session.model_controller.create_model(statement, ml_handler)
+
+        return model_name
 
     def delete(self, name: str, project_name: str, if_exists: bool = False) -> None:
         """
