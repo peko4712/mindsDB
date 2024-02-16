@@ -550,3 +550,21 @@ class QueryContext(Base):
         DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
     )
     created_at: datetime.datetime = Column(DateTime, default=datetime.datetime.now)
+
+
+class FineTuningJobs(Base):
+    __tablename__ = "fine_tuning_jobs"
+    id: int = Column(Integer, primary_key=True, autoincrement=True)
+    model_id: int = Column(Integer, nullable=False)
+    training_file = Column(String, nullable=False)
+    validation_file = Column(String)
+    created_at: datetime.datetime = Column(DateTime, default=datetime.datetime.now)
+
+    def as_dict(self) -> Dict:
+        return {
+            "id": self.id,
+            "model_id": self.model_id,
+            "training_file": self.training_file,
+            "validation_file": self.validation_file,
+            "created_at": self.created_at,
+        }
