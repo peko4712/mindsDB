@@ -300,6 +300,8 @@ class LangChainHandler(BaseMLEngine):
             return answer['output']
 
         completions = []
+        #save the inputs too
+        inputs = []
         # max_workers defaults to number of processors on the machine multiplied by 5.
         # https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
         max_workers = args.get('max_workers', None)
@@ -309,6 +311,8 @@ class LangChainHandler(BaseMLEngine):
         try:
             for future in as_completed(futures, timeout=agent_timeout_seconds):
                 completions.append(future.result())
+                #add a place to store output
+                self.store_llm_output(input_text, completion)
         except TimeoutError:
             completions.append("I'm sorry! I couldn't come up with a response in time. Please try again.")
         # Can't use ThreadPoolExecutor as context manager since we need wait=False.
@@ -321,6 +325,27 @@ class LangChainHandler(BaseMLEngine):
         pred_df = pd.DataFrame(completions, columns=[args['target']])
 
         return pred_df
+
+    def initialize_database(self):
+        # connect to an sqlite database
+        self.con = sqlite3.connect('llm_data.db')
+        cursor = self.con.cursor()
+        # Input of llm is a dataframe- this creates a place for both the input
+        # and the output to be saved
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS llm_io_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                input TEXT,
+                output TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )''')
+        self.con.commit()
+
+    def store_llm_output(self, input_data, output_data):
+        cursor = self.con.cursor()
+        #store the input and output into the llm_io_data table
+        cursor.execute('INSERT INTO llm_io_data (input, output) VALUES (?, ?)', (input_data, output_data))
+        self.con.commit()
 
     def describe(self, attribute: Optional[str] = None) -> pd.DataFrame:
         tables = ['info']
